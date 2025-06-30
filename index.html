@@ -133,7 +133,7 @@
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-analytics.js";
     import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
-    // Firebase config with databaseURL added
+    // Firebase config with correct Realtime Database URL
     const firebaseConfig = {
       apiKey: "AIzaSyDl2EkZ979ZB_xabqXoFFm1Kw_QQfniAkc",
       authDomain: "triton-ego4d-matrix.firebaseapp.com",
@@ -145,6 +145,7 @@
       measurementId: "G-ZXP60K67KD"
     };
 
+    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     getAnalytics(app);
     const db = getDatabase(app);
@@ -155,45 +156,38 @@
 
     const stateRef = ref(db, 'state');
 
+    // Real-time listener and initial state push
     onValue(stateRef, snap => {
       if (snap.exists()) {
         const val = snap.val();
         globalUsage = val.globalUsage;
         slotUsage = val.slotUsage;
-        console.log('Loaded state:', val);
       } else {
         set(stateRef, { globalUsage, slotUsage });
-        console.log('Initialized state to default');
       }
       renderUsage();
       renderMatrix();
-    }, error => {
-      console.error('Firebase onValue error:', error);
     });
 
     function saveState() {
-      set(stateRef, { globalUsage, slotUsage })
-        .then(() => console.log('State saved'))
-        .catch(err => console.error('Save error:', err));
+      set(stateRef, { globalUsage, slotUsage });
     }
 
     function renderUsage() {
       const ul = document.getElementById('usageList'); ul.innerHTML = '';
       globalUsage.forEach((count, i) => {
-        const li = document.createElement('li');
-        li.textContent = `Obj ${i+1}: ${count}`;
-        ul.appendChild(li);
+        const li = document.createElement('li'); li.textContent = `Obj ${i+1}: ${count}`; ul.appendChild(li);
       });
     }
 
     function renderMatrix() {
       const table = document.getElementById('matrix'); table.innerHTML = '';
       const header = ['Obj/Slot'];
-      for (let i = 0; i < SLOTS; i++) header.push(`R${Math.floor(i/WS)+1}WS${(i%WS)+1}`);
+      for (let i=0; i<SLOTS; i++) header.push(`R${Math.floor(i/WS)+1}WS${(i%WS)+1}`);
       const trHead = document.createElement('tr'); header.forEach(text => { const th = document.createElement('th'); th.textContent = text; trHead.appendChild(th); }); table.appendChild(trHead);
-      for (let o = 1; o <= OBJECTS; o++) {
+      for (let o=1; o<=OBJECTS; o++) {
         const tr = document.createElement('tr'); const th = document.createElement('th'); th.textContent = `Obj ${o}`; tr.appendChild(th);
-        for (let s = 0; s < SLOTS; s++) {
+        for (let s=0; s<SLOTS; s++) {
           const td = document.createElement('td'); const c = slotUsage[s][o-1] || '';
           td.textContent = c; if (c) td.classList.add('done'); tr.appendChild(td);
         }
@@ -204,8 +198,7 @@
     function renderAssignments(batch, date) {
       const cont = document.getElementById('assignments'); cont.innerHTML = '';
       batch.forEach((obj, idx) => {
-        const room = Math.floor(idx/WS) + 1;
-        const ws = (idx % WS) + 1;
+        const room = Math.floor(idx/WS)+1, ws = (idx%WS)+1;
         const card = document.createElement('div'); card.className = 'card';
         card.innerHTML = `<div class="date">${date||''}</div><div class="room-ws">Room ${room}–WS ${ws}</div><div class="object">Obj ${obj}</div>`;
         const colors = getComputedStyle(document.documentElement).getPropertyValue('--colors').split(',');
@@ -220,14 +213,14 @@
       return cand.find(id => globalUsage[id-1] === minGlob);
     }
 
-    async function assign() {
+    function assign() {
       const dateVal = document.getElementById('date').value;
       const count = parseInt(document.getElementById('peopleCount').value) || 0;
       let avail = Array.from({length: OBJECTS}, (_, i) => i+1);
       const batch = [];
       for (let i=0; i<Math.min(count, SLOTS); i++) {
         const p = pickForSlot(i, avail);
-        batch.push(p); avail = avail.filter(id => id !== p);
+        batch.push(p); avail = avail.filter(id => id!==p);
         globalUsage[p-1]++; slotUsage[i][p-1]++;
       }
       saveState(); renderAssignments(batch, dateVal);
