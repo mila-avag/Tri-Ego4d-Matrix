@@ -1,135 +1,242 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Object Selection Optimier</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Status Dashboard</title>
   <style>
-    /* Your existing CSS unchanged */
-    :root { --gap:10px; --card-radius:8px; --colors:#FFCDD2,#F8BBD0,#E1BEE7,#D1C4E9,#C5CAE9,#BBDEFB,#B3E5FC,#B2EBF2,#B2DFDB,#C8E6C9,#DCEDC8,#F0F4C3; }
-    body { font-family:'Segoe UI',sans-serif; margin:0; padding:20px; background:#f5f5f5; color:#333; }
-    h1 { text-align:center; margin-bottom:20px; font-size:2rem; }
-    .controls { display:flex; justify-content:center; gap:var(--gap); margin-bottom:20px; }
-    input, button { padding:8px; border:1px solid #ccc; border-radius:4px; font-size:1rem; }
-    button { background:#4caf50; color:#fff; border:none; }
-    button:hover { background:#45a049; }
-    .batch-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:var(--gap); margin-bottom:30px; }
-    .card { background:#fff; border-radius:var(--card-radius); box-shadow:0 2px 5px rgba(0,0,0,0.1); padding:15px; text-align:center; position:relative; }
-    .card>.date { position:absolute; top:8px; right:8px; font-size:.8rem; color:#666; }
-    .card .room-ws { font-weight:bold; margin-bottom:5px; }
-    .card .object { font-size:1.2rem; margin-bottom:10px; }
-    .counts { margin-top:30px; }
-    .counts ul { list-style:none; padding:0; display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:var(--gap); }
-    .counts li { background:#fff; padding:8px; border-radius:var(--card-radius); box-shadow:0 1px 3px rgba(0,0,0,0.1); text-align:center; }
-    #matrix { width:100%; border-collapse:collapse; margin-top:30px; }
-    #matrix th, #matrix td { border:1px solid #ccc; padding:4px; text-align:center; }
-    #matrix th { background:#eee; font-size:.9rem; }
-    .done { background:#c8e6c9; }
+    /* Remove tap highlight and focus outline */
+    * { -webkit-tap-highlight-color: transparent; }
+    button:focus { outline: none; }
+
+    body { font-family: Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
+    .container { max-width: 800px; margin: 2rem auto; background: #fff; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    h1, h2 { margin-top: 0; }
+
+    #errorMessage { display: none; background: #ffe6e6; color: #a33; padding: 1rem; border: 1px solid #a33; border-radius: 4px; margin-bottom: 1rem; }
+
+    .login-group { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 2rem; }
+    .login-group select,
+    .login-group input,
+    .login-group button { padding: 0.5rem; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; }
+
+    .status-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0; }
+    .status-btn {
+      flex: 1 1 calc(50% - 0.5rem);
+      padding: 1rem;
+      border: 2px solid transparent;
+      border-radius: 4px;
+      font-weight: bold;
+      text-align: center;
+      background: transparent;
+      transition: opacity 0.2s;
+    }
+    .status-btn:hover { opacity: 0.8; }
+    .status-btn[data-status="Tech issues"] { border-color: #e74c3c; color: #e74c3c; }
+    .status-btn[data-status="Recording"] { border-color: #27ae60; color: #27ae60; }
+    .status-btn[data-status="Setting up room"] { border-color: #f39c12; color: #f39c12; }
+    .status-btn[data-status="Break"] { border-color: #3498db; color: #3498db; }
+    .status-btn.active { color: #fff !important; }
+    .status-btn.active[data-status="Tech issues"] { background: #e74c3c; }
+    .status-btn.active[data-status="Recording"] { background: #27ae60; }
+    .status-btn.active[data-status="Setting up room"] { background: #f39c12; }
+    .status-btn.active[data-status="Break"] { background: #3498db; }
+
+    #activeStatus { font-size: 1.2rem; margin-top: 1rem; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { padding: 0.75rem; border: 1px solid #ddd; text-align: left; }
+    th { background: #f7f7f7; }
+    .log-row:nth-child(even) { background: #fafafa; }
+
+    @media (max-width: 600px) {
+      .login-group, .status-buttons { flex-direction: column; }
+      /* Card-style rows */
+      .log-row { display: block; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 1rem; padding: 0.75rem; background: #fff; }
+      table, thead, tbody, th, td, tr { display: block; }
+      thead tr { position: absolute; top: -9999px; left: -9999px; }
+      td { border: none; border-bottom: 1px solid #ddd; padding: 0.5rem 1rem; position: relative; }
+      td:last-child { border-bottom: none; }
+      td:before { content: attr(data-label); font-weight: bold; display: inline-block; width: 6rem; }
+    }
   </style>
 </head>
 <body>
-  <h1>Object Selection Optimizer</h1>
-  <div class="controls">
-    <label>Date:<input type="date" id="date"></label>
-    <label>#People:<input type="number" id="peopleCount" min="1" max="12" value="12"></label>
-    <button id="assignBtn">Assign</button>
-    <button id="resetBtn">Reset</button>
+  <div class="container">
+    <div id="errorMessage"></div>
+    <div id="userSelection">
+      <h1>Who are you?</h1>
+      <div class="login-group">
+        <select id="userSelect"><option value="" disabled selected>— select your name —</option></select>
+        <input id="pinInput" type="password" placeholder="PIN or admin code">
+        <button id="confirmUser">Login</button>
+        <button id="createUser">Create Account</button>
+      </div>
+    </div>
+    <div id="dashboardContainer" style="display:none">
+      <h1>Status Dashboard</h1>
+      <p id="userInfo"></p>
+      <div id="activeStatus">Active status: <span id="statusText"></span></div>
+      <div id="statusButtons" class="status-buttons"></div>
+      <h2>Your Change Log</h2>
+      <table id="log">
+        <thead>
+          <tr><th>Timestamp</th><th>Old</th><th>New</th><th>By</th><th>Hours</th></tr>
+        </thead>
+        <tbody id="logBody"></tbody>
+      </table>
+    </div>
   </div>
-  <section id="assignments" class="batch-list"></section>
-  <section class="counts"><h2>Total Usage Counts</h2><ul id="usageList"></ul></section>
-  <h2>Slot Usage Matrix</h2>
-  <table id="matrix"></table>
-
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-analytics.js";
-    import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
+    import { getDatabase, ref, get, push, set } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js';
 
-    // Exact Firebase config from console
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyDl2EkZ979ZB_xabqXoFFm1Kw_QQfniAkc",
       authDomain: "triton-ego4d-matrix.firebaseapp.com",
-      databaseURL: "https://triton-ego4d-matrix-default-rtdb.firebaseio.com/",
+      databaseURL: "https://triton-ego4d-matrix-default-rtdb.firebaseio.com",
       projectId: "triton-ego4d-matrix",
       storageBucket: "triton-ego4d-matrix.firebasestorage.app",
       messagingSenderId: "587475554830",
       appId: "1:587475554830:web:77c69aa312aea86c48e25f",
       measurementId: "G-ZXP60K67KD"
     };
-
-    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
-    getAnalytics(app);
-    // Explicitly pass URL to getDatabase to override fallback
-    const db = getDatabase(app, firebaseConfig.databaseURL);
+    const db = getDatabase(app);
 
-    const OBJECTS=12, ROOMS=6, WS=2, SLOTS=ROOMS*WS;
-    let globalUsage = Array(OBJECTS).fill(0);
-    let slotUsage = Array(SLOTS).fill().map(()=>Array(OBJECTS).fill(0));
+    // Refs
+    const usersRef    = ref(db, 'users');
+    const statusesRef = ref(db, 'statuses');
+    const logsRef     = ref(db, 'logs');
+    const configRef   = ref(db, 'config');
 
-    const stateRef = ref(db, 'state');
-    onValue(stateRef, snap=>{
-      if(snap.exists()){
-        const val=snap.val();
-        globalUsage=val.globalUsage; slotUsage=val.slotUsage;
-      } else {
-        set(stateRef, {globalUsage, slotUsage});
-      }
-      renderUsage(); renderMatrix();
+    let statusesArr = [], defaultStat = '', currentUser = '', isAdmin = false;
+
+    const userSelect    = document.getElementById('userSelect');
+    const pinInput      = document.getElementById('pinInput');
+    const confirmBtn    = document.getElementById('confirmUser');
+    const createBtn     = document.getElementById('createUser');
+    const selDiv        = document.getElementById('userSelection');
+    const dashDiv       = document.getElementById('dashboardContainer');
+    const userInfo      = document.getElementById('userInfo');
+    const statusText    = document.getElementById('statusText');
+    const statusButtons = document.getElementById('statusButtons');
+    const logBody       = document.getElementById('logBody');
+    const errDiv        = document.getElementById('errorMessage');
+
+    const showError = msg => { errDiv.textContent = msg; errDiv.style.display = 'block'; };
+    const clearError = () => { errDiv.style.display = 'none'; };
+
+    // Initialization
+    function init() {
+      get(configRef).then(snap => {
+        if (!snap.exists()) {
+          set(configRef, { statuses: ['Tech issues','Recording','Setting up room','Break'], defaultStatus: 'Tech issues' });
+          statusesArr = ['Tech issues','Recording','Setting up room','Break']; defaultStat = 'Tech issues';
+        } else {
+          const cfg = snap.val(); statusesArr = cfg.statuses; defaultStat = cfg.defaultStatus;
+        }
+      }).catch(() => {
+        showError('Config load failed');
+        statusesArr = ['Tech issues','Recording','Setting up room','Break']; defaultStat = 'Tech issues';
+      }).finally(loadUsers);
+    }
+
+    // Load users into dropdown
+    function loadUsers() {
+      clearError(); userSelect.innerHTML = '<option value="" disabled selected>— select your name —</option>';
+      get(usersRef).then(snap => {
+        if (snap.exists()) Object.keys(snap.val()).forEach(name => {
+          const opt = document.createElement('option'); opt.value = name; opt.textContent = name;
+          userSelect.appendChild(opt);
+        });
+      }).catch(() => showError('Users load failed'));
+    }
+
+    // Create account
+    createBtn.addEventListener('click', () => {
+      clearError(); const name = prompt('Enter your name:'); if (!name) return;
+      const pin = prompt('Set a 4-digit PIN or admin code:');
+      if (pin !== 'robotsrcool' && !/^[0-9]{4}$/.test(pin)) return showError('PIN must be 4 digits or admin code');
+      set(ref(db, `users/${name}`), { pin })
+        .then(() => set(ref(db, `statuses/${name}`), { currentStatus: defaultStat, updatedAt: new Date().toISOString() }))
+        .then(loadUsers)
+        .catch(() => showError('Account creation failed'));
     });
 
-    function saveState(){ set(stateRef, {globalUsage, slotUsage}); }
-    function renderUsage(){
-      const ul=document.getElementById('usageList'); ul.innerHTML='';
-      globalUsage.forEach((c,i)=>{ const li=document.createElement('li'); li.textContent=`Obj ${i+1}: ${c}`; ul.appendChild(li); });
-    }
-    function renderMatrix(){
-      const table=document.getElementById('matrix'); table.innerHTML='';
-      const header=['Obj/Slot'];
-      for(let i=0;i<SLOTS;i++) header.push(`R${Math.floor(i/WS)+1}WS${(i%WS)+1}`);
-      const trH=document.createElement('tr'); header.forEach(h=>{const th=document.createElement('th'); th.textContent=h; trH.appendChild(th);} ); table.appendChild(trH);
-      for(let o=1;o<=OBJECTS;o++){
-        const tr=document.createElement('tr'); const th=document.createElement('th'); th.textContent=`Obj ${o}`; tr.appendChild(th);
-        for(let s=0;s<SLOTS;s++){
-          const td=document.createElement('td'); const v=slotUsage[s][o-1]||''; td.textContent=v; if(v) td.classList.add('done'); tr.appendChild(td);
-        }
-        table.appendChild(tr);
+    // Login
+    confirmBtn.addEventListener('click', () => {
+      clearError(); const name = userSelect.value, pin = pinInput.value;
+      isAdmin = (pin === 'robotsrcool');
+      if (!isAdmin) {
+        get(ref(db, `users/${name}`)).then(snap => {
+          if (!snap.exists() || snap.val().pin !== pin) throw new Error();
+        }).catch(() => { showError('Invalid credentials'); return; });
       }
+      if (!name || !pin) return showError('Select name and enter PIN');
+      currentUser = name; selDiv.style.display = 'none'; dashDiv.style.display = 'block'; userInfo.textContent = `Logged in as: ${currentUser}`;
+      loadStatus(); loadLogs();
+    });
+
+    // Load current status
+    function loadStatus() {
+      clearError();
+      get(ref(db, `statuses/${currentUser}`)).then(snap => {
+        const stat = snap.exists() ? snap.val().currentStatus : defaultStat;
+        renderStatus(stat);
+      }).catch(() => showError('Status fetch failed'));
     }
-    function renderAssignments(batch,date){
-      const cont=document.getElementById('assignments'); cont.innerHTML='';
-      batch.forEach((obj,i)=>{
-        const room=Math.floor(i/WS)+1, ws=(i%WS)+1;
-        const card=document.createElement('div'); card.className='card';
-        card.innerHTML=`<div class="date">${date||''}</div><div class="room-ws">Room ${room}–WS ${ws}</div><div class="object">Obj ${obj}</div>`;
-        const cols=getComputedStyle(document.documentElement).getPropertyValue('--colors').split(',');
-        card.style.background=cols[obj-1].trim(); cont.appendChild(card);
+
+    // Load log entries
+    function loadLogs() {
+      clearError(); logBody.innerHTML = '';
+      get(logsRef).then(snap => {
+        if (snap.exists()) Object.values(snap.val()).forEach(d => {
+          if (isAdmin || d.name === currentUser) appendLog(d);
+        });
+      }).catch(() => showError('Logs load failed'));
+    }
+
+    // Render status buttons
+    function renderStatus(current) {
+      statusText.textContent = current; statusButtons.innerHTML = '';
+      statusesArr.forEach(s => {
+        const btn = document.createElement('button'); btn.className = 'status-btn'; btn.dataset.status = s; btn.textContent = s;
+        if (s === current) btn.classList.add('active');
+        btn.addEventListener('click', () => updateStatus(s)); statusButtons.appendChild(btn);
       });
     }
-    function pickForSlot(i,avail){
-      const minS=Math.min(...avail.map(id=>slotUsage[i][id-1]));
-      let cand=avail.filter(id=>slotUsage[i][id-1]===minS);
-      const minG=Math.min(...cand.map(id=>globalUsage[id-1]));
-      return cand.find(id=>globalUsage[id-1]===minG);
+
+    // Update status
+    function updateStatus(newS) {
+      clearError(); const oldS = statusText.textContent; const ts = new Date();
+      get(logsRef).then(snap => {
+        let prevTime = '';
+        if (snap.exists()) {
+          const arr = Object.values(snap.val()).filter(d => d.name === currentUser);
+          if (arr.length) prevTime = ((ts - new Date(arr[arr.length-1].timestamp)) / 3600000).toFixed(2);
+        }
+        appendLog({ timestamp: ts.toISOString(), oldStatus: oldS, newStatus: newS, user: currentUser, timeSpent: prevTime, name: currentUser });
+        return push(ref(db, 'logs'), { timestamp: ts.toISOString(), name: currentUser, oldStatus: oldS, newStatus: newS, user: currentUser, timeSpent: parseFloat(prevTime)||0 });
+      }).then(() => set(ref(db, `statuses/${currentUser}`), { currentStatus: newS, updatedAt: new Date().toISOString() }))
+        .then(() => renderStatus(newS)).catch(() => showError('Update failed'));
     }
-    function assign(){
-      const dateVal=document.getElementById('date').value;
-      const count=parseInt(document.getElementById('peopleCount').value)||0;
-      let avail=Array.from({length:OBJECTS},(_,i)=>i+1), batch=[];
-      for(let i=0;i<Math.min(count,SLOTS);i++){
-        const p=pickForSlot(i,avail); batch.push(p);
-        avail=avail.filter(id=>id!==p);
-        globalUsage[p-1]++; slotUsage[i][p-1]++;
-      }
-      saveState(); renderAssignments(batch,dateVal);
+
+    // Append one log row
+    function appendLog(d) {
+      const tr = document.createElement('tr'); tr.className = 'log-row';
+      tr.innerHTML = `
+        <td data-label="Timestamp">${new Date(d.timestamp).toLocaleString()}</td>
+        <td data-label="Old">${d.oldStatus||''}</td>
+        <td data-label="New">${d.newStatus||''}</td>
+        <td data-label="By">${d.user||''}</td>
+        <td data-label="Hours">${d.timeSpent!=null?d.timeSpent:''}</td>
+      `;
+      logBody.appendChild(tr);
     }
-    document.getElementById('assignBtn').addEventListener('click',assign);
-    document.getElementById('resetBtn').addEventListener('click',()=>{
-      if(!confirm('Clear all history?'))return;
-      globalUsage=Array(OBJECTS).fill(0);
-      slotUsage=Array(SLOTS).fill().map(()=>Array(OBJECTS).fill(0));
-      saveState();
-    });
+
+    init();
   </script>
 </body>
 </html>
