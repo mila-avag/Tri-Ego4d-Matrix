@@ -6,18 +6,36 @@
   <title>Status Dashboard</title>
   <style>
     * { -webkit-tap-highlight-color: transparent; }
+    button { font-family: inherit; }
     button:focus { outline: none; }
+
     body { font-family: Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
     .container { max-width: 800px; margin: 2rem auto; background: #fff; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     h1, h2 { margin-top: 0; }
+
     #errorMessage { display: none; background: #ffe6e6; color: #a33; padding: 1rem; border: 1px solid #a33; border-radius: 4px; margin-bottom: 1rem; }
+
     .login-group { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 2rem; }
-    .login-group select, .login-group input, .login-group button { padding: 0.5rem; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; }
-    .status-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0; }
+    .login-group select,
+    .login-group input,
+    .login-group button { padding: 0.5rem; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; }
+
     .controls { display: flex; justify-content: flex-end; gap: 0.5rem; margin-bottom: 1rem; }
     #logoutBtn { background: #7f8c8d; color: #fff; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.9rem; cursor: pointer; }
     #logoutBtn:hover { background: #7f8c8d; }
-    .status-btn { flex: 1 1 calc(50% - 0.5rem); padding: 1rem; border: 2px solid transparent; border-radius: 4px; font-weight: bold; text-align: center; background: transparent; transition: opacity 0.2s; }
+
+    .status-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0; }
+    .status-btn {
+      flex: 1 1 calc(50% - 0.5rem);
+      padding: 1rem;
+      border: 2px solid transparent;
+      border-radius: 4px;
+      font-weight: bold;
+      text-align: center;
+      background: transparent;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
     .status-btn:hover { opacity: 0.8; }
     .status-btn[data-status="Inactive"] { border-color: #7f8c8d; color: #7f8c8d; }
     .status-btn[data-status="Tech issues"] { border-color: #e74c3c; color: #e74c3c; }
@@ -30,14 +48,19 @@
     .status-btn.active[data-status="Recording"] { background: #27ae60; }
     .status-btn.active[data-status="Setting up room"] { background: #f39c12; }
     .status-btn.active[data-status="Break"] { background: #3498db; }
-    #activeStatus { font-size: 1.2rem; margin-top: 1rem; }
+
+    #activeStatus { font-size: 1.2rem; margin-top: 1rem; display: flex; align-items: center; }
     #statusTimer { font-size: 0.9rem; color: #555; margin-left: 1rem; }
+
     table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
     th, td { padding: 0.75rem; border: 1px solid #ddd; text-align: left; }
     th { background: #f7f7f7; }
     .log-row:nth-child(even) { background: #fafafa; }
+
     @media (max-width: 600px) {
-      .login-group, .status-buttons, .controls { flex-direction: column; }
+      .login-group,
+      .status-buttons,
+      .controls { flex-direction: column; }
       .log-row { display: block; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 1rem; padding: 0.75rem; background: #fff; }
       table, thead, tbody, th, td, tr { display: block; }
       thead tr { position: absolute; top: -9999px; left: -9999px; }
@@ -50,7 +73,6 @@
 <body>
   <div class="container">
     <div id="errorMessage"></div>
-
     <div id="userSelection">
       <h1>Who are you?</h1>
       <div class="login-group">
@@ -60,7 +82,6 @@
         <button id="createUser">Create Account</button>
       </div>
     </div>
-
     <div id="dashboardContainer" style="display:none">
       <div class="controls">
         <button id="logoutBtn">Logout</button>
@@ -71,18 +92,19 @@
       <div id="statusButtons" class="status-buttons"></div>
       <h2>Your Change Log</h2>
       <table id="log">
-        <thead><tr><th>Timestamp</th><th>Old</th><th>New</th><th>By</th><th>Hours</th></tr></thead>
+        <thead>
+          <tr><th>Timestamp</th><th>Old</th><th>New</th><th>By</th><th>Hours</th></tr>
+        </thead>
         <tbody id="logBody"></tbody>
       </table>
     </div>
   </div>
-
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
     import { getDatabase, ref, get, push, set } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js';
 
     // Firebase config
-    const firebaseConfig = { apiKey:"AIzaSyDl2EkZ979ZB_xabqXoFFm1Kw_QQfniAkc", authDomain:"triton-ego4d-matrix.firebaseapp.com", databaseURL:"https://triton-ego4d-matrix-default-rtdb.firebaseio.com", projectId:"triton-ego4d-matrix", storageBucket:"triton-ego4d-matrix.firebasestorage.app", messagingSenderId:"587475554830", appId:"1:587475554830:web:77c69aa312aea86c48e25f", measurementId:"G-ZXP60K67KD" };
+    const firebaseConfig = { apiKey: "AIzaSyDl2EkZ979ZB_xabqXoFFm1Kw_QQfniAkc", authDomain: "triton-ego4d-matrix.firebaseapp.com", databaseURL: "https://triton-ego4d-matrix-default-rtdb.firebaseio.com", projectId: "triton-ego4d-matrix", storageBucket: "triton-ego4d-matrix.firebasestorage.app", messagingSenderId: "587475554830", appId: "1:587475554830:web:77c69aa312aea86c48e25f", measurementId: "G-ZXP60K67KD" };
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
@@ -91,13 +113,12 @@
     const logsRef = ref(db, 'logs');
     const statusesRef = ref(db, 'statuses');
 
-    const statusesArr = ['Inactive','Tech issues','Recording','Setting up room','Break'];
-    let currentUser = '';
-    let isAdmin = false;
-    let statusSince = new Date();
-    let timerInterval;
+    // Constants & state
+    const statusesArr = ['Inactive', 'Tech issues', 'Recording', 'Setting up room', 'Break'];
+    let currentUser = '', isAdmin = false;
+    let statusSince = new Date(), timerInterval;
 
-    // UI elements
+    // UI references
     const userSelect = document.getElementById('userSelect');
     const pinInput = document.getElementById('pinInput');
     const confirmBtn = document.getElementById('confirmUser');
@@ -112,10 +133,11 @@
     const logBody = document.getElementById('logBody');
     const errDiv = document.getElementById('errorMessage');
 
+    // Error handlers
     const showError = msg => { errDiv.textContent = msg; errDiv.style.display = 'block'; };
     const clearError = () => { errDiv.style.display = 'none'; };
 
-    // Persist login
+    // Session persistence
     function persistLogin() {
       localStorage.setItem('currentUser', currentUser);
       localStorage.setItem('isAdmin', isAdmin);
@@ -135,6 +157,7 @@
       return false;
     }
 
+    // UI toggles
     function showDashboard() {
       selDiv.style.display = 'none';
       dashDiv.style.display = 'block';
@@ -143,20 +166,20 @@
       loadLogs();
     }
 
-    // Timer
+    // Timer for active statuses only
     function startTimer() {
       clearInterval(timerInterval);
       timerInterval = setInterval(() => {
         const diff = Date.now() - statusSince.getTime();
-        const totalSec = Math.floor(diff/1000);
-        const hrs = Math.floor(totalSec/3600);
-        const mins = Math.floor((totalSec%3600)/60);
-        const secs = totalSec%60;
-        statusTimer.textContent = ` (${hrs.toString().padStart(2,'0')}:${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')})`;
+        const totalSec = Math.floor(diff / 1000);
+        const hrs = Math.floor(totalSec / 3600);
+        const mins = Math.floor((totalSec % 3600) / 60);
+        const secs = totalSec % 60;
+        statusTimer.textContent = ` (${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')})`;
       }, 1000);
     }
 
-    // Load users
+    // Load user list
     async function loadUsers() {
       clearError();
       userSelect.innerHTML = '<option value="" disabled selected>— select your name —</option>';
@@ -173,10 +196,11 @@
       }
     }
 
-    // Create account
+    // Create new account (always Inactive)
     async function createAccount() {
       clearError();
-      const name = prompt('Enter your name:'); if (!name) return;
+      const name = prompt('Enter your name:');
+      if (!name) return;
       const pin = prompt('Set a 4-digit PIN or admin code:');
       if (pin !== 'robotsrcool' && !/^[0-9]{4}$/.test(pin)) return showError('PIN must be 4 digits or admin code');
       try {
@@ -188,7 +212,7 @@
       }
     }
 
-    // Login
+    // Login handler
     async function login() {
       clearError();
       const name = userSelect.value;
@@ -204,7 +228,7 @@
       showDashboard();
     }
 
-    // Logout
+    // Logout handler
     function logout() {
       clearLogin();
       dashDiv.style.display = 'none';
@@ -212,21 +236,24 @@
       loadUsers();
     }
 
-    // Load status
+    // Fetch and render status
     async function loadStatus() {
       clearError();
       try {
         const snap = await get(ref(db, `statuses/${currentUser}`));
-        const data = snap.exists() ? snap.val() : { currentStatus: 'Inactive', updatedAt: new Date().toISOString() };
+        const data = snap.exists()
+          ? snap.val()
+          : { currentStatus: 'Inactive', updatedAt: new Date().toISOString() };
         statusSince = new Date(data.updatedAt);
         renderStatus(data.currentStatus);
-        startTimer();
+        if (data.currentStatus !== 'Inactive') startTimer();
+        else { statusTimer.textContent = ''; clearInterval(timerInterval); }
       } catch {
         showError('Status fetch failed');
       }
     }
 
-    // Load logs
+    // Fetch and render logs
     async function loadLogs() {
       clearError();
       logBody.innerHTML = '';
@@ -241,9 +268,15 @@
       }
     }
 
-    // Update status
+    // Update status (no write/log for Inactive)
     async function updateStatus(newS) {
       clearError();
+      if (newS === 'Inactive') {
+        renderStatus('Inactive');
+        statusTimer.textContent = '';
+        clearInterval(timerInterval);
+        return;
+      }
       const oldS = statusText.textContent;
       const ts = new Date();
       try {
@@ -251,7 +284,7 @@
         let prevTime = '';
         if (snap.exists()) {
           const arr = Object.values(snap.val()).filter(d => d.name === currentUser);
-          if (arr.length) prevTime = ((ts - new Date(arr[arr.length-1].timestamp)) / 3600000).toFixed(2);
+          if (arr.length) prevTime = ((ts - new Date(arr[arr.length - 1].timestamp)) / 3600000).toFixed(2);
         }
         appendLog({ timestamp: ts.toISOString(), oldStatus: oldS, newStatus: newS, user: currentUser, timeSpent: prevTime, name: currentUser });
         await push(logsRef, { timestamp: ts.toISOString(), name: currentUser, oldStatus: oldS, newStatus: newS, user: currentUser, timeSpent: parseFloat(prevTime) || 0 });
@@ -277,7 +310,7 @@
       });
     }
 
-    // Append log entry
+    // Append a log entry row
     function appendLog(d) {
       const tr = document.createElement('tr'); tr.className = 'log-row';
       tr.innerHTML = `
@@ -290,7 +323,7 @@
       logBody.appendChild(tr);
     }
 
-    // Bind events
+    // Event bindings
     createBtn.addEventListener('click', createAccount);
     confirmBtn.addEventListener('click', login);
     logoutBtn.addEventListener('click', logout);
