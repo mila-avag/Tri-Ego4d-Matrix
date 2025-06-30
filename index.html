@@ -22,7 +22,7 @@
 
     .controls { display: flex; justify-content: flex-end; gap: 0.5rem; margin-bottom: 1rem; }
     #logoutBtn { background: #7f8c8d; color: #fff; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.9rem; cursor: pointer; }
-    #logoutBtn:hover { background: #7f8c8d; }
+    #logoutBtn:hover { background: #6c7b82; }
 
     .status-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0; }
     .status-btn {
@@ -36,7 +36,8 @@
       cursor: pointer;
       transition: opacity 0.2s;
     }
-    .status-btn:hover { opacity: 0.8; }
+    .status-btn:hover:not(:disabled) { opacity: 0.8; }
+    .status-btn:disabled { cursor: default; opacity: 0.6; }
     .status-btn[data-status="Inactive"] { border-color: #7f8c8d; color: #7f8c8d; }
     .status-btn[data-status="Tech issues"] { border-color: #e74c3c; color: #e74c3c; }
     .status-btn[data-status="Recording"] { border-color: #27ae60; color: #27ae60; }
@@ -277,10 +278,11 @@
         clearInterval(timerInterval);
         return;
       }
+      if (newS === statusText.textContent) return; // prevent re-click
       const oldS = statusText.textContent;
       const ts = new Date();
       try {
-        const snap = await get(logsRef);
+        const snap = await get(ref(db, 'logs'));
         let prevTime = '';
         if (snap.exists()) {
           const arr = Object.values(snap.val()).filter(d => d.name === currentUser);
@@ -304,7 +306,7 @@
         btn.className = 'status-btn';
         btn.dataset.status = s;
         btn.textContent = s;
-        if (s === current) btn.classList.add('active');
+        if (s === current) btn.classList.add('active'), btn.disabled = true;
         btn.addEventListener('click', () => updateStatus(s));
         statusButtons.appendChild(btn);
       });
