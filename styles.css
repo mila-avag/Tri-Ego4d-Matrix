@@ -1,0 +1,66 @@
+* { -webkit-tap-highlight-color: transparent; }
+button { font-family: inherit; }
+button:focus { outline: none; }
+
+body { font-family: Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
+.container { max-width: 800px; margin: 2rem auto; background: #fff; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+h1, h2 { margin-top: 0; }
+
+#errorMessage { display: none; background: #ffe6e6; color: #a33; padding: 1rem; border: 1px solid #a33; border-radius: 4px; margin-bottom: 1rem; }
+
+.login-group { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 2rem; }
+.login-group select,
+.login-group input,
+.login-group button { padding: 0.5rem; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; }
+
+.controls { display: flex; justify-content: flex-end; gap: 0.5rem; margin-bottom: 1rem; }
+#logoutBtn { background: #7f8c8d; color: #fff; border: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.9rem; cursor: pointer; }
+#logoutBtn:hover { background: #6c7b82; }
+
+.status-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0; }
+.status-btn {
+  flex: 1 1 calc(50% - 0.5rem);
+  padding: 1rem;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  font-weight: bold;
+  text-align: center;
+  background: transparent;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.status-btn:hover:not(:disabled) { opacity: 0.8; }
+.status-btn:disabled { cursor: default; opacity: 0.6; }
+
+.status-btn[data-status="Inactive"] { border-color: #7f8c8d; color: #7f8c8d; }
+.status-btn[data-status="Tech issues"] { border-color: #e74c3c; color: #e74c3c; }
+.status-btn[data-status="Recording"] { border-color: #27ae60; color: #27ae60; }
+.status-btn[data-status="Setting up room"] { border-color: #f39c12; color: #f39c12; }
+.status-btn[data-status="Break"] { border-color: #3498db; color: #3498db; }
+
+.status-btn.active { color: #fff !important; }
+.status-btn.active[data-status="Inactive"] { background: #7f8c8d; }
+.status-btn.active[data-status="Tech issues"] { background: #e74c3c; }
+.status-btn.active[data-status="Recording"] { background: #27ae60; }
+.status-btn.active[data-status="Setting up room"] { background: #f39c12; }
+.status-btn.active[data-status="Break"] { background: #3498db; }
+
+#activeStatus { font-size: 1.2rem; margin-top: 1rem; display: flex; align-items: center; }
+#statusTimer { font-size: 0.9rem; color: #555; margin-left: 1rem; }
+
+table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+th, td { padding: 0.75rem; border: 1px solid #ddd; text-align: left; }
+th { background: #f7f7f7; }
+.log-row:nth-child(even) { background: #fafafa; }
+
+@media (max-width: 600px) {
+  .login-group,
+  .status-buttons,
+  .controls { flex-direction: column; }
+  .log-row { display: block; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 1rem; padding: 0.75rem; background: #fff; }
+  table, thead, tbody, th, td, tr { display: block; }
+  thead tr { position: absolute; top: -9999px; left: -9999px; }
+  td { border: none; border-bottom: 1px solid #ddd; padding: 0.5rem 1rem; position: relative; }
+  td:last-child { border-bottom: none; }
+  td:before { content: attr(data-label); font-weight: bold; display: inline-block; width: 6rem; }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "my-dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview"
+  },
+  "dependencies": {
+    "firebase": "^9.22.2"
+  },
+  "devDependencies": {
+    "vite": "^4.0.0"
+  }
+}
