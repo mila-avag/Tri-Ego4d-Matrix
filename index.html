@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Status Dashboard</title>
+  
+  <script type="module" crossorigin src="/assets/index-1e08cc07.js"></script>
+  <link rel="stylesheet" href="/assets/index-833efdc1.css">
+</head>
+<body>
+  <div class="container">
+    <div id="errorMessage"></div>
+    <div id="userSelection">
+      <h1>Who are you?</h1>
+      <div class="login-group">
+        <select id="userSelect">
+          <option value="" disabled selected>— select your name —</option>
+        </select>
+        <input id="pinInput" type="password" placeholder="PIN or admin code">
+        <button id="confirmUser">Login</button>
+        <button id="createUser">Create Account</button>
+      </div>
+    </div>
+    <div id="dashboardContainer" style="display:none">
+      <div class="controls">
+        <button id="logoutBtn">Logout</button>
+      </div>
+      <h1>Status Dashboard</h1>
+      <p id="userInfo"></p>
+      <div id="activeStatus">
+        Active status: <span id="statusText"></span><span id="statusTimer"></span>
+      </div>
+      <div id="statusButtons" class="status-buttons"></div>
+      <h2>Your Change Log</h2>
+      <table id="log">
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Old</th>
+            <th>New</th>
+            <th>By</th>
+            <th>Hours</th>
+          </tr>
+        </thead>
+        <tbody id="logBody"></tbody>
+      </table>
+    </div>
+  </div>
+  
+</body>
+</html>
